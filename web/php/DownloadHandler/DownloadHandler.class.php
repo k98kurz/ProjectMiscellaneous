@@ -6,8 +6,10 @@ class DownloadHandler {
 	public function doFile ($filename, $newname = "") {
 		if (!file_exists($filename)) { return false; }
 		$fcontents = file_get_contents($filename);
+		$p = pathinfo($filename);
+		$name = (!empty($newname)&&gettype($newname)=="string") ? $newname : $p['basename'];
 		header("Content-type: application/octet-stream");
-		header("Content-Disposition: filename=\"".(!empty($newname)&&gettype($newname)=="string")?$newname:$filename."\"");
+		header("Content-Disposition: filename=\"".$name."\"");
 		header("Content-length: ".strlen($fcontents));
 		header("Cache-control: private");
 		echo $fcontents;
