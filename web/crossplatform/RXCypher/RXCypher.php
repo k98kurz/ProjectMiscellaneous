@@ -33,6 +33,9 @@ class RXCypher {
 		if (!isset($cypherText) || gettype($cypherText)!="string") { return NULL; }
 		$cyph = str_split($cypherText);
 		$plainText = array(); $temp = 0;
+		for ($i=0; $i<sizeof($cyph); $i++) {
+			$cyph[$i] = ord($cyph[$i]);
+		}
 		for ($i=0, $k=0; $i<sizeof($cyph); $i++, $k++) {
 			if ($k==sizeof($this->password)) { $k = 0; }
 			$temp = $this->dec( $cyph[$i], $this->password[$k] );
