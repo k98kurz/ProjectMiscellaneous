@@ -1,0 +1,14 @@
+Refactoring goals:
+1) Separate into modules/templates:
+ - a) Post handler
+ - b) Form data generator
+ - c) Templates calling in both
+2) Smarter features:
+ - a) New label system (php)
+	- Associative array
+	- Default to data name
+ - b) Improved required fields (php&js)
+	- PHP: check for all required fields in $_POST
+	- JS: check all required inputs before submission
+ - c) Email template support
+3) General code cleanup
