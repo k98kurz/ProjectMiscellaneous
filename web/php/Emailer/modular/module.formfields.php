@@ -25,8 +25,7 @@ require_once("dependency.security.php");
 class FormFieldGenerator {
 	// returns an array of html input fields
 	// defaults to grabbing labels
-	public function getFields ( $getLabels = true ) {
-		if ($getLabels) { return $this->getFieldsWithLabels(); }
+	public function getFields ( $actionhash, $timestamp ) {
 		
 		$fields = Config::fields();
 		$requiredFields = Config::requiredFields();
@@ -44,11 +43,12 @@ class FormFieldGenerator {
 			array_push($htmlInputArray, $d);
 			array_push($htmlInputArray, "<input name=\"".$f."hash\">");
 		}
-		array_push($htmlInputArray, "<input type=\"hidden\" id=\"actionhash\" value=")
+		array_push($htmlInputArray, "<input type=\"hidden\" id=\"actionhash\" name=\"actionhash\" value=\"".$actionhash."\">");
+		array_push($htmlInputArray, "<input type=\"hidden\" id=\"timestamp\" name=\"timestamp\" value=\"".$timestamp."\">");
 		return $htmlInputArray;
 	}
 	
-	public function getFieldsWithLabels () {
+	public function getFieldsWithLabels ( $actionhash $timestamp ) {
 		$labels = Config::fieldLabels();
 		if (empty($labels)||$labels==false) {
 			return $this->getFields(false);
@@ -73,7 +73,8 @@ class FormFieldGenerator {
 			array_push($htmlInputArray, $d);
 			array_push($htmlInputArray, "<input name=\"".$f."hash\">");
 		}
-		array_push($htmlInputArray, "<input type=\"hidden\" id=\"actionhash\" value=")
+		array_push($htmlInputArray, "<input type=\"hidden\" id=\"actionhash\" value=\"".$actionhash."\">");
+		array_push($htmlInputArray, "<input type=\"hidden\" id=\"timestamp\" value=\"".$timestamp."\">");
 		return $htmlInputArray;
 	}
 }

@@ -15,20 +15,64 @@
  * 	crafting the security algorithms for each application.
 */
 
-class postHandler {
+class PostHandler {
+	private $sec;
+	
+	public function __construct () {
+		$sec = new Security ();
+	}
+	
+	// Main method:
+	//		checks if data is valid
+	//		sends contact email
+	//		returns redirect: error or success
+	public function handle () {
+		$ac = $_POST['actionhash'];
+		$redirect = "<!doctype html><html><head><title>Form Submission Redirect</title>";
+		$data = new array();
+		$error = false;
+		if (!$sec->validateActionHash("sendContactForm", $ts, $ac)) { array_push($data, "Cryptographic error: invalid actionhash."); $error = true; }
+		if (!checkRequired($ac)) { array_push($data, "Error: required field not filled out."); $error = true; )
+		if (!checkDataValid($ac)) { array_push($data, "Error: invalid data fields."); $error = true; }
+		if (!$error) {
+			$res = EmailHandler::sendContactForm($this->getData(), "New contact form message");
+			if (!$res) {
+				$error = true;
+				array_push($data, "Internal error: email function failed.");
+			} else {
+				array_push($data, "Email success!");
+			}
+		}
+		$data = implode(",", $data);
+		$redirect .= "<meta http-equiv=\"refresh\" value=\"0; url=index.php?option=";
+		$redirect .= (($error) ? "failed&err" : "success&") . "data=".urlencode($data)."\">";
+		$redirect .= "</head><body>Refreshing...</body></html>\n";
+		echo $redirect;
+	}
 	
 	// Check that all required fields are submitted
-	public function checkRequired () {
+	private function checkRequired ( $actionhash ) {
 		$requiredFields = Config::requiredFields();
+		while (count($requiredFields)>0) {
+			$f = array_pop($requiredFields);
+			if (empty($_POST[$f])||empty($_POST[$f."hash"])) { return false; }
+		}
+		return true;
 	}
 	
 	// Check that all field data submitted has correct hash
-	public function checkDataValid () {
-		
+	private function checkDataValid ( $actionhash ) {
+		$fields = Config::fields();
+		while (count($fields)>0) {
+			$f = array_pop($fields);
+			if (!empty($_POST[$f])&&!empty($_POST[$f."hash"]) {
+				if (!$this->sec->validateData($f, $_POST[$f], $actionhash, $_POST[$f.'hash'])) { return false; }
+			}
+		}
 	}
 	
 	// Returns all data submitted
-	public function getData () {
+	private function getData () {
 		
 	}
 }

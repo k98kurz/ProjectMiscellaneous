@@ -20,12 +20,13 @@ if (!defined("_CONST_")) { die("Unauthorized access"); }
 
 class Config {
 	const contactEmail = "",
-		devEmail = "jonathan@codemasonsinc.com",
+		devEmail = "",
 		fromEmail = "no-reply@domain.tld",
 		emailTemplate = "template.email.php",
 		useHTMLEmail = true,
 		automatedEmailHeader = "AUTOMATED MESSAGE FROM CONTACT FORM",
 		formTemplate = "template.formfields.php",
+		useFormLabels = true,
 		submitSuccessTemplate = "template.submit.php",
 		submitFailTemplate = "template.submitfailed.php",
 		useResetButton = true;

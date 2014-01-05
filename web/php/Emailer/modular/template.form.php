@@ -22,8 +22,6 @@ if (!defined("_CONST_")) { die("Unauthorized access"); }
 class template {
 	public static function fetchTemplate ( $dataArray, $salts ) {
 		$fields = array_reverse(Config::fields());
-		$requiredFields = Config::requiredFields();
-		$textareas = Config::textareas();
 		
 		$html = "<!doctype html>\n<html>\n\t<head>\n\t\t<title>Contact Form</title>\n";
 		$html.= "\t\t<link rel=\"stylesheet\" href=\"contactform.css\">\n";

@@ -34,7 +34,7 @@ class EmailHandler {
 	
 	// sends message from contactform message information
 	// $messageData is an associative array of pre-validated information
-	public static function sendContactForm ( $subject, $messageData ) {
+	public static function sendContactForm ( $messageData, $subject ) {
 		if (empty($messageData['subject'])) { $messageData['subject'] = $subject; }
 		$message = self::parseEmailTemplate($messageData);
 		return self::send ( (empty(Config::contactEmail) ? Config::devEmail : Config::contactEmail), $subject, $message );
