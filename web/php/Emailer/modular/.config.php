@@ -31,7 +31,8 @@ class Config {
 		submitFailTemplate = "template.submitfailed.php",
 		useResetButton = true;
 	
-	
+	// Array of field names reversed due to the parsing being reversed
+	// This applies for both fields and requiredFields
 	public static function fields () {
 		$filehandle = fopen("fields.csv.txt");
 		$fields = fgetcsv($filehandle);
@@ -42,13 +43,13 @@ class Config {
 		$filehandle = fopen("fieldsrequired.csv.txt");
 		$fields = fgetcsv($filehandle);
 		fclose($filehandle);
-		return $fields;
+		return array_reverse($fields);
 	}
 	public static function textareas () {
 		$filehandle = fopen("fieldstextareas.csv.txt");
 		$fields = fgetcsv($filehandle);
 		fclose($filehandle);
-		return $fields;
+		return array_reverse($fields);
 	}
 	public static function fieldLabels () {
 		return = parse_ini_file("fieldlabels.ini");

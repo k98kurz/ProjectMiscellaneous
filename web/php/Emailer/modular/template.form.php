@@ -22,9 +22,11 @@ if (!defined("_CONST_")) { die("Unauthorized access"); }
 class template {
 	public static function fetchTemplate ( $dataArray, $salts ) {
 		$fields = array_reverse(Config::fields());
+		$formappinputs = $fields;
 		
 		$html = "<!doctype html>\n<html>\n\t<head>\n\t\t<title>Contact Form</title>\n";
-		$html.= "\t\t<link rel=\"stylesheet\" href=\"contactform.css\">\n";
+		$html.= "\t\t<link rel=\"stylesheet\" href=\"contactform.css\">\n\t\t<script src=\"formapp.js\">";
+		$html.= "</script>\n\t\t<script src=\"MD5.js\"></script>\n";
 		$html.= "\t</head>\n\t<body class=\"contactform\">\n";
 		$html.= "\t\t<form onsubmit=\"return false;\" action=\"#\" target=\"_self\" id=\"salts\">\n";
 		while (count($fields>0)) {
@@ -39,7 +41,16 @@ class template {
 			$html.= "\t\t\t".$f."\n";
 		}
 		
-		$html.= "</form>\t</body>\n</html>\n"
+		$html.= "\t\t</form>\n\t\t<input type=\"submit\" value=\"submit\" onclick=\"formapp.submit()\" id=\"sendbutton\">";
+		if (!empty(Config::useResetButton)) {
+			$html.= "<input type=\"submit\" value=\"reset\" onclick=\"formapp.reset()\">";
+		}
+		$html.= "\n\t\t<script>formapp.inputs = [false";
+		foreach ($formappinputs as $k) {
+			$html.=",\"".$k."\"";
+		}
+		$html.= "]\n\t\t</script>";
+		$html.= "\n\t</body>\n</html>\n";
 		
 		return $html;
 	}

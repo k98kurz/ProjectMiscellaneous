@@ -57,7 +57,7 @@ class FormFieldGenerator {
 		$requiredFields = Config::requiredFields();
 		$textareas = Config::textareas();
 		$htmlInputArray = array();
-		while (count($fields)>1) {
+		while (count($fields)>0) {
 			$f = array_pop($fields);
 			if (array_search($f, $textareas)!==false) {
 				$l = (empty($labels[$f])) ? $f : $labels[$f];
