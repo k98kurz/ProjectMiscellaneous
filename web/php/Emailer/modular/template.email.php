@@ -30,7 +30,7 @@ class template {
 		
 		foreach ($dataArray as $key=>$value) {
 			$html.= "<p>".(empty($labels[$key]) ? $key : $labels[$key]).":";
-			$html.= ((array_search($key, $textareas)!==false) ? "</p><p>" : " ").$value."</p>";
+			$html.= ((array_search($key, $textareas)!==false) ? "</p><p>" : " ").$value."</p><p>&nbsp;</p>";
 		}
 		
 		$html.= "</body></html>\n";

@@ -28,12 +28,13 @@ class PostHandler {
 	//		returns redirect: error or success
 	public function handle () {
 		$ac = $_POST['actionhash'];
+		$ts = $_POST['timestamp'];
 		$redirect = "<!doctype html><html><head><title>Form Submission Redirect</title>";
 		$data = new array();
 		$error = false;
 		if (!$sec->validateActionHash("sendContactForm", $ts, $ac)) { array_push($data, "Cryptographic error: invalid actionhash."); $error = true; }
-		if (!checkRequired($ac)) { array_push($data, "Error: required field not filled out."); $error = true; )
-		if (!checkDataValid($ac)) { array_push($data, "Error: invalid data fields."); $error = true; }
+		if (!$this->checkRequired()) { array_push($data, "Error: required field not filled out."); $error = true; )
+		if (!$this->checkDataValid($ac)) { array_push($data, "Error: invalid data field(s)."); $error = true; }
 		if (!$error) {
 			$res = EmailHandler::sendContactForm($this->getData(), "New contact form message");
 			if (!$res) {
@@ -51,7 +52,7 @@ class PostHandler {
 	}
 	
 	// Check that all required fields are submitted
-	private function checkRequired ( $actionhash ) {
+	private function checkRequired ( ) {
 		$requiredFields = Config::requiredFields();
 		while (count($requiredFields)>0) {
 			$f = array_pop($requiredFields);
@@ -73,6 +74,12 @@ class PostHandler {
 	
 	// Returns all data submitted
 	private function getData () {
-		
+		$data = new array();
+		$fields = Config::fields();
+		while (count($fields)>0) {
+			$f = array_pop($fields);
+			array_push($data, $_POST[$f]);
+		}
+		return $data;
 	}
 }

@@ -31,16 +31,16 @@ switch ($option) {
 	case "send":
 		require_once("module.posthandler.php");
 		$posthandler = new PostHandler ();
-		$posthandler->handlePosts("send");
+		$posthandler->handle();
 		break;
 	case "failed":
 		require_once("template.submitfailed.php");
-		$data = explode(",", $_GET['errdata']);
+		$data = explode(",", urldecode($_GET['errdata']));
 		echo template::fetchTemplate($data);
 		break;
 	case "success":
 		require_once("template.submit.php");
-		$data = explode(",", $_GET['data']);
+		$data = explode(",", urldecode($_GET['data']));
 		echo template::fetchTemplate($data);
 		break;
 	default:

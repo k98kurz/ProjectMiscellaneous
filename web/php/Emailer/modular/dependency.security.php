@@ -39,7 +39,7 @@ class Security {
 	}
 	
 	public function validateActionHash ( $action, $timestamp, $actionhash ) {
-		if ($timestamp+600<$this->getTimestamp()) {
+		if ($this->getTimestamp()<$timestamp+600) {
 			return ($this->makeActionHash($action, $timestamp)==$actionhash);
 		}
 		return false;
