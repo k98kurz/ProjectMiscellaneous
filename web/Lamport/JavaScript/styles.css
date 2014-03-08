@@ -1,0 +1,17 @@
+body {margin:0;padding:0;background: #ffe;}
+.row {width:100%;padding:0;margin: 10px 0;}
+.container {width:1200px;position:relative;margin:auto;}
+.block {padding:10px;float:left;clear:right;}
+.row-1,.row-2,.row-3,.row-4,.row-5,.row-6,.row-7,.row-8,.row-9,.row-10,.row-11,.row-12 {float:left;clear:right;}
+.row-1 {width:100px;}
+.row-2 {width:200px;}
+.row-3 {width:300px;}
+.row-4 {width:400px;}
+.row-5 {width:500px;}
+.row-6 {width:600px;}
+.row-7 {width:700px;}
+.row-8 {width:800px;}
+.row-9 {width:900px;}
+.row-10 {width:1000px;}
+.row-11 {width:1100px;}
+.row-12 {width:1200px;}
