@@ -234,11 +234,13 @@ hasher.prototype.init = function (nBits) {
 		var i, n, c = 1024, n1 = [], data2 = {}, hash = "";
 		function pad (data, index) {
 			var s1 = data.substr(0, index), s2 = data.substr(index, data.length-index);
-			return s1 + hasher.algos.call(this, 16)(s1.substr(s1.length-2,2)+s2.substr(0, 2)).charAt(2) + s2;
+			"pad: "+s1 + algos.call(this, 16)(s1.substr(s1.length-2,2)+s2.substr(0, 2)).charAt(2) + s2;
+			return s1 + algos.call(this, 16)(s1.substr(s1.length-2,2)+s2.substr(0, 2)).charAt(2) + s2;
 		}
 		
-		n = nbits-nbits%4;
-		while (c>16&&n>0) {
+		n = nbits-nbits%8;
+		if (n<32){n1.push(16);data2[16]=[];}
+		while (c>17&&n>0) {
 			if (c>n&&n%c) {
 				c = c/2;
 			} else if (n%c) {
@@ -286,9 +288,48 @@ hasher.prototype.init = function (nBits) {
 				hash += hasher.algorithms[(data2[n][i].length*4).toString()](data2[n][i]);
 			}
 		}
+		while (hash.length*4>nbits&&nbits>15&&!(nbits%8)) {
+			hash = (function(h){
+				var a,b,c;
+				a = hash.substr(0,2); b = hash.substr(hash.length-3,2);
+				c = hasher.algorithms["16"](a+b);
+				return hash.substring(2,hash.length/2)+c[1]+c[2]+hash.substring(hash.length/2+1,hash.length-1);
+			})(hash);
+		}
 		
 		return hash;
 	};
+	
+	function algos (bits) {
+		if (typeof bits!=="number"||bits<16) { bits = 16; }
+		var nbits = bits-bits%16;
+		
+		run = function (data) {
+			if (typeof data!=="string") { data = "0"; }
+			if (data=="0") {
+				while (data.length<nbits/4) { data += "0"; }
+				return data;
+			}
+			data = hasher.checkHex(data);
+			function pad (data, index) {
+				var s1 = data.substr(0, index), s2 = data.substr(index, data.length-index);
+				return s1 + hasher.algorithms["16"].call(this, s1.substr(s1.length-2,2)+s2.substr(0, 2)).charAt(2) + s2;
+			}
+			data = (function(data, padscope) {
+				var i=2;
+				while (data.length%(nbits/4)!=0) {
+					while (data.length<4) { data += "0"; break; }
+					if (i>data.length-2) { i=2; }
+					data = pad.call(padscope, data, i);
+					i+=2;
+				}
+				return data;
+			})(data, this);
+			return hasher.algorithms[nbits.toString()](data);
+		};
+		
+		return run;
+	}
 };
 
 hasher.checkHex = function (str) {
@@ -312,37 +353,6 @@ hasher.checkHex = function (str) {
 		return hex;
 	}
 	return hex;
-};
-
-hasher.algos = function (bits) {
-	if (typeof bits!=="number"||bits<16) { bits = 16; }
-	var nbits = bits-bits%16;
-	
-	run = function (data) {
-		if (typeof data!=="string") { data = "0"; }
-		if (data=="0") {
-			while (data.length<nbits/4) { data += "0"; }
-			return data;
-		}
-		data = hasher.checkHex(data);
-		function pad (data, index) {
-			var s1 = data.substr(0, index), s2 = data.substr(index, data.length-index);
-			return s1 + hasher.algorithms["16"].call(this, s1.substr(s1.length-2,2)+s2.substr(0, 2)).charAt(2) + s2;
-		}
-		data = (function(data, padscope) {
-			var i=2;
-			while (data.length%(nbits/4)!=0) {
-				while (data.length<4) { data += "0"; break; }
-				if (i>data.length-2) { i=2; }
-				data = pad.call(padscope, data, i);
-				i+=2;
-			}
-			return data;
-		})(data, this);
-		return hasher.algorithms[nbits.toString()](data);
-	};
-	
-	return run;
 };
 	
 hasher.algorithms = {
