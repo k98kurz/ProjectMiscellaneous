@@ -1,7 +1,7 @@
 /*
  * Lamport public key cracker, v1.0
  * JS is about 1/(nCPUcores) the speed of your full cpu, so this will be slow
- * Making this with openCL or openGL would drastically improve performance
+ * Making this with openCL or openGL would drastically improve performance (maybe webGLSL will work)
  */
 
 function keyCracker (nBits, nPairs, hashFunction, scope, verbose) {
@@ -31,8 +31,7 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 	// the things
 	function crackNumber (hash) {
 		var i, n, cobj = {};
-		cobj.incremented = [];
-		cobj.current = []
+		cobj.array = [];
 		n = hash.length/2;
 		//console.log(hash + ".length/2 = " + n);
 		for (i=0;i<n;i++) {
@@ -42,18 +41,26 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 		cobj.cond = false;
 		cobj.knum = "";
 		cobj.index = cobj.array.length-1;
+		cobj.log = function () {
+			if (Math.random()*Math.pow(10, hash.length*4)>Math.pow(10, hash.length*4)-1) {
+				console.log("kraken: "+cobj.array.toString());
+			}
+		};
+		cobj.status = function (d) {
+			document.getElementById("status").innerHTML = d;
+		};
 		cobj.match = function () {
 			var i, k="", m=0;
 			
 			for (i=0;i<cobj.array.length;i++) {
-				m=cobj[i].toString(16);
+				m=cobj.array[i].toString(16);
 				while(m.length<2){m="0"+m;}
 				k+=m;
 			}
 			if (hashFunction.call(scope, k)==hash) {
 				cobj.knum = k;
 				cobj.cond = true;
-				if (verbose&&!diagnostic_suppress_verbose) {
+				if (verbose) {
 					console.log("Value found: "+cobj.knum);
 				}
 			}
@@ -65,32 +72,22 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 	function kraken (cobj) {
 		var i, k, ind;
 		if (cobj.index>0) {
-			ind = cobj.index
+			ind = cobj.index;
+			cobj.index--;
 			for (i=0;i<256;i++) {
 				if (cobj.cond) { return; }
-				cobj.array[ind]
+				cobj.array[ind] = i;
 				kraken(cobj);
-				/*if (cobj.incremented[cobj.incremented.length-1]>253) {
-					console.log("cobj.incremented[cobj.incremented.length-1]>253");
-				}*/
-			}
-			console.log("kracken recursion(3):"+
-				"\n	typeof cobj.current: "+typeof cobj.current+
-				"\n	cobj.current.length: "+cobj.current.length+
-				"\n	cobj.current: "+cobj.current.toString()+
-				"\n	typeof cobj.incremented: "+typeof cobj.current+
-				"\n	cobj.incremented.length: "+cobj.incremented.length+
-				"\n	cobj.incremented: "+cobj.incremented.toString());
+			}cobj.log();
+			cobj.index++;
 		} else {
 			for (k=0;k<256;k++) {
 				if (cobj.cond) { return; }
-				cobj.current[0] = k;
+				cobj.array[0] = k;
 				cobj.match();
-				if (cobj.current[0]>253) {
-					console.log("cobj.current[0]>253");
-				}
 			}
 		}
+		//cobj.index++;
 	}
 	this.crackPublicKey = function (publicKeyArray, diagnostic_suppress_verbose) {
 		if (typeof scope!=="object"){scope = this;}
