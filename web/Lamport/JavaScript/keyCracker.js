@@ -1,6 +1,6 @@
 /*
  * Lamport public key cracker, v1.0
- * JS is about 1/(nCPUcores) the speed of your full cpu, so this will be slow
+ * JS is less than 1/(nCPUcores) the speed of your full cpu, so this will be slow
  * Making this with openCL or openGL would drastically improve performance (maybe webGLSL will work)
  */
 
@@ -30,24 +30,18 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 	
 	// the things
 	function crackNumber (hash) {
-		var i, n, cobj = {};
-		cobj.array = [];
+		var i, n, cobj = {array:[],cond:false,knum:""};
 		n = hash.length/2;
 		//console.log(hash + ".length/2 = " + n);
 		for (i=0;i<n;i++) {
 			cobj.array.push(0);
 		}
 		//console.log(cobj.current);
-		cobj.cond = false;
-		cobj.knum = "";
 		cobj.index = cobj.array.length-1;
 		cobj.log = function () {
 			if (Math.random()*Math.pow(10, hash.length*4)>Math.pow(10, hash.length*4)-1) {
 				console.log("kraken: "+cobj.array.toString());
 			}
-		};
-		cobj.status = function (d) {
-			document.getElementById("status").innerHTML = d;
 		};
 		cobj.match = function () {
 			var i, k="", m=0;
@@ -115,29 +109,16 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 		return privateKeyArray;
 	}
 	
-	function createPublicKey (privateKeyArray, hashFunction, scope) {
-		if (typeof hashFunction!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
-		if (!scope||typeof scope!=="object") { scope = this; }
-		var i, k, publicKeyAr = [];
-		for (i=0;i<privateKeyArray.length;i++) {
-			publicKeyAr.push([
-				hashFunction.call(scope, privateKeyArray[i][0]),
-				hashFunction.call(scope, privateKeyArray[i][1])
-				]);
-		}
-		return publicKeyAr;
-	}
-	
 	// diagnostic and dependencies
-	this.crackNKeys = function (n, verbose, diagnostic_suppress_verbose) {
+	this.crackNKeys = function (n, diagnostic_suppress_verbose) {
 		var i, pkey, pubk, crackedk, dt, stime, endtime, collisions=0;
 		dt = new Date(); stime = dt.getTime(); console.log("crackNKeys("+n+") start time: "+stime+" ms");
 		for (i=0;i<n;i++) {
 			pkey = createPrivateKey(); pubk = createPublicKey(pkey, hasher);
-			pk1 = crackPublicKey(pubk, hasher, diagnostic_suppress_verbose);
+			pk1 = this.crackPublicKey(pubk, hasher, diagnostic_suppress_verbose);
 			if(verbose){console.log("crackNKeys("+n+")["+i+"]: (pk1.toString() == pkey.toString()) = "+(pk1.toString() == pkey.toString()));}
 			if(verbose){console.log("crackNKeys("+n+")["+i+"]: (createPublicKey(pk1) == createPublicKey(pkey)) = "+(createPublicKey(pk1) == createPublicKey(pkey)));}
-			if (pk1.toString()!==pkey.toString()) {collisons++;}
+			if (pk1.toString()!==pkey.toString()) {collisions++;}
 		}
 		dt = new Date(); endtime = dt.getTime();
 		console.log("crackNKeys("+n+") end time: "+endtime+" ms");
@@ -150,6 +131,18 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 			privateKeyAr.push(getNumPair());
 		}
 		return privateKeyAr;
+	}
+	function createPublicKey (privateKeyArray, hashFunction, scope) {
+		if (typeof hashFunction!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
+		if (!scope||typeof scope!=="object") { scope = this; }
+		var i, k, publicKeyAr = [];
+		for (i=0;i<privateKeyArray.length;i++) {
+			publicKeyAr.push([
+				hashFunction.call(scope, privateKeyArray[i][0]),
+				hashFunction.call(scope, privateKeyArray[i][1])
+				]);
+		}
+		return publicKeyAr;
 	}
 	function getNumPair () {
 		var ns = [[""],[""]], n1, n2, i, k;
@@ -183,7 +176,8 @@ keyCracker.prototype.init = function (nBits, nPairs, hashFunc, scop, verbos) {
 		}
 		return output;
 	}
-	// recursive function; converts multi-dimension arrays of hex into a single block
+	
+	// recursive function; converts multi-dimensional arrays of hex into a single block
 	function rawHex (hexArray) {
 		var output = "", i;
 		for (i=0;i<hexArray.length;i++) {

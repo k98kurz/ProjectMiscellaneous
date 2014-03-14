@@ -16,7 +16,6 @@
  *              memory use (compared to using strings in base 2). The shortened method names 
  *              output and input purely in text, while the long method names output and input in
  *              arrays. There are internal functions for parsing between the two forms.
- * 
  */
 
 var lamport = function (nBits, nPairs) {
@@ -27,14 +26,17 @@ lamport.prototype.init = function (nBits, nPairs) {
 	if (!nPairs) { nPairs = 64; }
 	var nbits = nBits, npairs = nPairs;
 	
-	this.cPK = function () {
+	this.cPrK = function () {
 		return rawHex(this.createPrivateKey());
 	};
-	this.sD = function (data, privateKeyText, hashFunction, scope) {
-		return rawHex(this.signData(data, hexToKeyArray(privateKeyText), hashFunction, scope));
+	this.cPuK = function (privateKeyText, hashfunc, hfscope) {
+		return rawHex(this.createPublicKey(hexToKeyArray(privateKeyText), hashfunc, hfscope));
 	};
-	this.chkSig = function (data, signatureText, publicKeyText, hashFunction, scope) {
-		return this.verifySignature (data, hexToSigArray(signatureText), hexkeyToArray(publicKeyText), hashFunction, scope);
+	this.sD = function (data, privateKeyText, hashfunc, hfscope) {
+		return rawHex(this.signData(data, hexToKeyArray(privateKeyText), hashfunc, hfscope));
+	};
+	this.chkSig = function (data, signatureText, publicKeyText, hashfunc, hfscope) {
+		return this.verifySignature (data, hexToSigArray(signatureText), hexToKeyArray(publicKeyText), hashfunc, hfscope);
 	};
 	
 	this.createPrivateKey = function () {
@@ -44,61 +46,82 @@ lamport.prototype.init = function (nBits, nPairs) {
 		}
 		return privateKeyAr;
 	};
-	this.createPublicKey = function (privateKeyArray, hashFunction, scope) {
-		if (typeof hashFunction!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
-		if (!scope||typeof scope!=="object") { scope = this; }
+	this.createPublicKey = function (privateKeyArray, hashfunc, hfscope) {
+		if (typeof hashfunc!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
+		if (!hfscope||typeof hfscope!=="object") { hfscope = this; }
 		var i, k, publicKeyAr = [];
 		
 		for (i=0;i<privateKeyArray.length;i++) {
 			publicKeyAr.push([
-				hashFunction.call(scope, privateKeyArray[i][0]),
-				hashFunction.call(scope, privateKeyArray[i][1])
+				hashfunc.call(hfscope, privateKeyArray[i][0]),
+				hashfunc.call(hfscope, privateKeyArray[i][1])
 				]);
 		}
 		return publicKeyAr;
 	};
-	this.signData = function (data, privateKeyArray, hashFunction, scope, dataIsHex) {
-		if (!scope||typeof scope!=="object") { scope = this; }
-		if (typeof data=="undefined"||typeof hashFunction!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
-		var i, k, bits, hash, nhashbits, signature = [];
+	this.signData = function (data, privateKeyArray, hashfunc, hfscope) {
+		if (!hfscope||typeof hfscope!=="object") { hfscope = {}; }
+		if (typeof data=="undefined"||typeof hashfunc!=="function"||typeof privateKeyArray!=="object"||typeof privateKeyArray.push!=="function") { return null; }
+		var i, k, bits, hash, hdata, tbits = [], signature = [];
 		
 		data = (typeof data=="string" ? data : data.toString());
 		
-		if (data.length<privateKeyArray.length) {
-			if (typeof dataIsHex!=="undefined"&&dataIsHex) {
-				for (i=0;i<data.length;i+=2) {
-					bits = parseInt(data[i] + data[i+1], 16).toString(2).split("");
-					while (bits.length<8) { bits.splice(0,0,"0"); }
-					for (k=0;k<8;k++) {
-						signature.push(privateKeyArray[i/2][parseInt(bits[k])]);
-					}
-				}
-			} else {
-				for (i=0;i<data.length;i++) {
-					bits = data[i].charCodeAt(0).toString(2).split("");
-					while (bits.length<8) { bits.splice(0,0,"0"); }
-					for (k=0;k<8;k++) {
-						signature.push(privateKeyArray[i][parseInt(bits[k])]);
-					}
+		if (data.length*8>nbits) {
+			hash = hashfunc.call(hfscope, data);
+			for (i=0;i<hash.length;i+=2) {
+				bits = parseInt(hash[i] + hash[i+1], 16).toString(2).split("");
+				while (bits.length<8) { bits.splice(0,0,"0"); }
+				for (k=0;k<8;k++) {
+					tbits.push(bits[k]);
 				}
 			}
 		} else {
-			hash = hashFunction.call(scope, data);
-			hash = (typeof hash=="string" ? hash : hash.toString()).split("");
-			if (hash.length*4>privateKeyArray.length) { return null; }
-			for (i=0;i<hash.length;i+=2) {
-				bits = parseInt(hash[i]+hash[i+1], 16).toString(2).split("");
+			hdata = checkHex(data);
+			for (i=0;i<hdata.length;i+=2) {
+				bits = parseInt(hdata[i] + hdata[i+1], 16).toString(2).split("");
 				while (bits.length<8) { bits.splice(0,0,"0"); }
 				for (k=0;k<8;k++) {
-					signature.push(privateKeyArray[i/2][parseInt(bits[k])]);
+					tbits.push(bits[k]);
 				}
 			}
 		}
 		
+		for (i=0;i<tbits.length;i++) {
+			signature.push(privateKeyArray[i][parseInt(tbits[i])]);
+		}
+		
 		return signature;
 	};
-	this.verifySignature = function (data, signatureArray, publicKey, hashFunction, scope) {
-		if (!scope||typeof scope!=="object") { scope = this; }
+	this.verifySignature = function (data, signatureArray, publicKey, hashfunc, hfscope) {
+		if (!hfscope||typeof hfscope!=="object") { hfscope = this; }
+		var hash, bits, tbits = [];
+		
+		if (data.length*8>nbits) {
+			hash = hashfunc.call(hfscope, data);
+			for (i=0;i<hash.length;i+=2) {
+				bits = parseInt(hash[i] + hash[i+1], 16).toString(2).split("");
+				while (bits.length<8) { bits.splice(0,0,"0"); }
+				for (k=0;k<8;k++) {
+					tbits.push(bits[k]);
+				}
+			}
+		} else {
+			hdata = checkHex(data);
+			for (i=0;i<hdata.length;i+=2) {
+				bits = parseInt(hdata[i] + hdata[i+1], 16).toString(2).split("");
+				while (bits.length<8) { bits.splice(0,0,"0"); }
+				for (k=0;k<8;k++) {
+					tbits.push(bits[k]);
+				}
+			}
+		}
+		for (i=0;i<tbits.length;i++) {
+			if (hashfunc.call(hfscope, signatureArray[i])!==publicKey[i][parseInt(tbits[i])]) {
+				return false;
+			}
+		}
+		
+		return true;
 		
 	};
 	
@@ -169,10 +192,48 @@ lamport.prototype.init = function (nBits, nPairs) {
 		return output;
 	}
 	function hexToKeyArray (hexString) {
+		if (typeof hexString!=="string"||hexString.length*4!==nbits*npairs*2) { return null; }
+		var keyar = [], i;
 		
+		for (i=0;i<hexString.length;i+=nbits/2) {
+			keyar.push([hexString.substr(i,nbits/4),hexString.substr(i+nbits/4,nbits/4)]);
+		}
+		
+		return keyar;
 	}
 	function hexToSigArray (hexString) {
+		if (typeof hexString!=="string"||hexString.length*4!==nbits*npairs) { return null; }
+		var sigar = [], i;
 		
+		for (i=0;i<hexString.length;i+=nbits/4) {
+			sigar.push(hexString.substr(i,nbits/4));
+		}
+		
+		return sigar;
+	}
+	
+	// if str input is not hex, returns hex representation; else, returns str
+	function checkHex (str) {
+		var i, k;
+		if (str.length%2) {
+			return convert(str);
+		} else {
+			k = false;
+			for (i=0;i<str.length;i+=2) {
+				if (isNaN(parseInt(str.substr(i,1), 16))) { k = true; }
+				if (isNaN(parseInt(str.substr(i+1,1), 16))) { k = true; }
+			}
+			if (k) { return convert(str); }
+			return str;
+		}
+		function convert (chars) {
+			var i, hex = "";
+			for (i=0;i<str.length;i++) {
+				hex += str.charCodeAt(i).toString(16);
+			}
+			return hex;
+		}
+		return hex;
 	}
 	
 	/* collision resistant 16 bit hashing function for testing purposes (limited to 16 bits input; for use with nBits = 16 only)
