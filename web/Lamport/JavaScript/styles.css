@@ -1,4 +1,4 @@
-body {margin:0;padding:0;background: #ffe;}
+body {margin:0;padding:0;background: #ffe; font-family: 'Open Sans';}
 .row {width:100%;padding:0;margin: 10px 0;min-height:1px;clear:both;}
 .container {width:1200px;position:relative;margin:auto;}
 .block {padding:10px;float:left;clear:right;}
