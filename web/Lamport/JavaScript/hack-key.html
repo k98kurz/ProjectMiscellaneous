@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Merkle Lamport Signature Scheme Test</title>
+		<link rel="stylesheet" href="styles.css">
+		<script src="MD5.js"></script>
+		<script src="lamport.js"></script>
+		<script src="hashtree.js"></script>
+		<script src="keyCracker.js"></script>
+		<style>
+			span {display:inline-block;}
+		</style>
+		<script>
+			lmp = lamport(32,1);
+			pkey = lmp.createPrivateKey();
+			pubk = lmp.createPublicKey(pkey, hasher(32).hash);
+			kc = keyCracker(32,1,hasher(32).hash,{},true);
+			pk2 = [];
+			function doit() {
+				//alert(pkey);
+				function $ (id) { return document.getElementById(id); }
+				(function(){
+					$("pkey").innerHTML = hasher(128).hash(pkey.toString());console.log(hasher(128).hash(pkey.toString()));
+					$("pubk").innerHTML = hasher(128).hash(pubk.toString());console.log(hasher(128).hash(pubk.toString()));
+				})();
+			}
+			function doti() {
+				function $ (id) { return document.getElementById(id); }
+				pk2 = kc.crackPublicKey(pubk);
+				$("pk2").innerHTML = hasher(128).hash(pk2.toString());console.log(hasher(128).hash(pk2.toString()));
+			}
+		</script>
+	</head>
+	<body>
+		<div class="row" id="top">
+			<div class="container">
+				<div class="row-4"><div class="block">Address: <span id="address"></span></div></div>
+				<div class="row-4"><div class="block">Level of Tree Recursion: <input id="recursionlevel" type="text"></div></div>
+				<div class="row-4"><div class="block"></div></div>
+			</div>
+		</div>
+		<div class="row" id="middle">
+			<div class="container">
+				<div class="row-4"></div>
+			</div>
+		</div>
+		<div class="row" id="bottom">
+			<div class="container">
+				<div class="row-4">
+					<div>pkey: <span id="pkey"></span></div>
+					<div>pubk: <span id="pubk"></span></div>
+				</div>
+				<div class="row-2">kraken: <span id="kraken"></span></div>
+				<div class="row-3">status: <span id="status"></span></div>
+				<div class="row-3">pk2: <span id="pk2"></span></div>
+			</div>
+		</div>
+	</body>
+</html>
