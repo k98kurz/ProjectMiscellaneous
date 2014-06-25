@@ -4,44 +4,39 @@ if (!defined("_CONST_")) { die("Unauthorized access"); }
 
 class RXCypher {
 	
-	private $password = array();
+	public function __construct ( ) { }
 	
-	public function __construct ( $pass ) {
-		if (!isset($pass)) { return NULL; }
-		$this->password = str_split($pass);
-		for ($i=0; $i<sizeof($this->password); $i++) {
-			$this->password[$i] = ord($this->password[$i]);
+	public function encrypt ( $plaintext, $key ) {
+		if (!isset($plaintext) || gettype($plaintext)!="string") { return NULL; }
+		if (!isset($key) || gettype($key)!="string") { return NULL; }
+		$key = str_split($key);
+		for ($i=0; $i<sizeof($key); $i++) {
+			$key[$i] = ord($key[$i]);
 		}
+		$plaintext = str_split($plaintext);
+		$cyphertext = array();
+		for ($i=0; $i<sizeof($plaintext); $i++) {
+			$plaintext[$i] = ord($plaintext[$i]);
+		}
+		for ($i=0, $k=0; $i<sizeof($plaintext); $i++, $k++) {
+			if ($k==sizeof($key)) { $k = 0; }
+			array_push($cyphertext, chr($this->enc($plaintext[$i], $key[$k])));
+		}
+		return implode($cyphertext);
 	}
 	
-	public function encrypt ( $plainText ) {
-		if (!isset($plainText) || gettype($plainText)!="string") { return NULL; }
-		$plain = str_split($plainText);
-		$cypherText = array(); $temp = 0;
-		for ($i=0; $i<sizeof($plain); $i++) {
-			$plain[$i] = ord($plain[$i]);
+	public function decrypt ( $cyphertext, $key ) {
+		if (!isset($cyphertext) || gettype($cyphertext)!="string") { return NULL; }
+		$cyphertext = str_split($cyphertext);
+		$plaintext = array();
+		for ($i=0; $i<sizeof($cyphertext); $i++) {
+			$cyphertext[$i] = ord($cyphertext[$i]);
 		}
-		for ($i=0, $k=0; $i<sizeof($plain); $i++, $k++) {
-			if ($k==sizeof($this->password)) { $k = 0; }
-			$temp = $this->enc( $plain[$i], $this->password[$k] );
-			array_push($cypherText, chr($temp));
+		for ($i=0, $k=0; $i<sizeof($cyphertext); $i++, $k++) {
+			if ($k==sizeof($key)) { $k = 0; }
+			array_push($plaintext, chr($this->dec($cyph[$i], $key[$k])));
 		}
-		return implode($cypherText);
-	}
-	
-	public function decrypt ( $cypherText ) {
-		if (!isset($cypherText) || gettype($cypherText)!="string") { return NULL; }
-		$cyph = str_split($cypherText);
-		$plainText = array(); $temp = 0;
-		for ($i=0; $i<sizeof($cyph); $i++) {
-			$cyph[$i] = ord($cyph[$i]);
-		}
-		for ($i=0, $k=0; $i<sizeof($cyph); $i++, $k++) {
-			if ($k==sizeof($this->password)) { $k = 0; }
-			$temp = $this->dec( $cyph[$i], $this->password[$k] );
-			array_push($plainText, chr($temp));
-		}
-		return implode($plainText);
+		return implode($plaintext);
 	}
 	
 	private function enc ( $c, $k ) {
